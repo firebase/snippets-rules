@@ -1,0 +1,45 @@
+service cloud.firestore {
+   match /databases/{database}/documents {
+     match /stories/{story} {
+        function isSignedIn() {
+          return request.auth != null;
+        }
+
+        function getRole() {
+          return value(/databases/$(database)/documents/stories/$(story)).roles[request.auth.uid];
+        }
+
+        function isOneOfRoles(array) {
+          return isSignedIn() && (getRole() in array);
+        }
+
+        function isValidNewStory() {
+          return !exists(/databases/$(database)/documents/stories/$(story))
+            && request.resource.data.roles[request.auth.uid] == 'owner';
+        }
+
+        function onlyContentChanged() {
+          // Ensure that title and roles are unchanged and that no new
+          // fields are added to the document.
+          return request.resource.data.title == resource.data.title
+            && request.resource.data.roles == resource.data.roles
+            && request.resource.size() == resource.size();
+        }
+
+        // Split writing into creation, deletion, and updating. Only an
+        // owner can create or delete a story but a writer can update
+        // story content.
+        allow create: if isValidNewStory();
+        allow delete: if isOneOfRoles(['owner']);
+        allow update: if isOneOfRoles(['owner'])
+                      || (isOneOfRoles(['writer']) && onlyContentChanged());
+        allow read: if isOneOfRoles(['owner', 'writer', 'commenter', 'reader']);
+
+        match /comments/{comment} {
+          allow read: if isOneOfRoles(['owner', 'writer', 'commenter', 'reader']);
+          allow create: if isOneOfRoles(['owner', 'writer', 'commenter'])
+                        && request.resource.data.user == request.auth.uid;
+        }
+     }
+   }
+}

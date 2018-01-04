@@ -1,0 +1,11 @@
+service cloud.firestore {
+   match /databases/{database}/documents {
+     match /stories/{story} {
+         // TODO: Story rules go here...
+
+         match /comments/{comment} {
+            // TODO: Comment rules go here...
+         }
+     }
+   }
+}

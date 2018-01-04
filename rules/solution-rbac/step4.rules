@@ -1,0 +1,35 @@
+service cloud.firestore {
+   match /databases/{database}/documents {
+     match /stories/{story} {
+        function isSignedIn() {
+          return request.auth != null;
+        }
+
+        function getRole() {
+          return value(/databases/$(database)/documents/stories/$(story)).roles[request.auth.uid];
+        }
+
+        function isOneOfRoles(array) {
+          return isSignedIn() && (getRole() in array);
+        }
+
+        function isValidNewStory() {
+          return !exists(/databases/$(database)/documents/stories/$(story))
+            && request.resource.data.roles[request.auth.uid] == 'owner';
+        }
+
+        allow write: if isValidNewStory() || isOneOfRoles(['owner'])
+        allow read: if isOneOfRoles(['owner', 'writer', 'commenter', 'reader']);
+
+        match /comments/{comment} {
+          allow read: if isOneOfRoles(['owner', 'writer', 'commenter', 'reader']);
+
+          // Owners, writers, and commenters can create comments. The
+          // user id in the comment document must match the requesting
+          // user's id.
+          allow create: if isOneOfRoles(['owner', 'writer', 'commenter'])
+                        && request.resource.data.user == request.auth.uid;
+        }
+     }
+   }
+}

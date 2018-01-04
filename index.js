@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 const fs = require('fs');
-const path = require('path');
 const google = require('googleapis');
+const path = require('path');
+const recursiveReadSync = require('recursive-readdir-sync')
 
 /**
  * Construct a new authenticated rules client.
@@ -93,9 +94,9 @@ const getAuthenticatedRulesClient = () => {
 /**
  * Utility function to log a rules string and the response of the 'test' call.
  */
-const logRequestResponse = (rulesString, response) => {
+const logRequestResponse = (fileName, rulesString, response) => {
   const logMsg = `
-Rules
+Rules (${fileName})
 ------------------
 ${rulesString}
 
@@ -113,21 +114,23 @@ ${JSON.stringify(response)}
 return getAuthenticatedRulesClient()
   .then(rulesClient => {
     const dirName = 'rules';
-    const rulesFiles = fs.readdirSync(dirName);
-
+    const rulesFiles = recursiveReadSync(dirName);
     const promises = rulesFiles.map(f => {
-      const filePath = path.join(dirName, f);
-      const rulesString = fs.readFileSync(filePath).toString();
+      const expectInvalid = f.indexOf('invalid') >= 0;
+      const rulesString = fs.readFileSync(f).toString();
 
       // TODO: Return all promises.
       const testPromise = rulesClient.test(rulesString).then(response => {
-        logRequestResponse(rulesString, response);
+        logRequestResponse(f, rulesString, response);
 
-        if (response.issues) {
-          const err = `Invalid rules in ${filePath}: ${JSON.stringify(
+        if (!expectInvalid && response.issues) {
+          const err = `Invalid rules in ${f}: ${JSON.stringify(
             response
           )}`;
 
+          return Promise.reject(err);
+        } else if (expectInvalid && !response.issues) {
+          const err = `Expected invalid rules in ${f}.`;
           return Promise.reject(err);
         }
       });
@@ -139,5 +142,5 @@ return getAuthenticatedRulesClient()
   })
   .catch(err => {
     console.log(`Error: ${err}`);
-    exit(1);
+    process.exit(1);
   });

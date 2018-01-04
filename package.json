@@ -10,7 +10,8 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "googleapis": "^23.0.0"
+    "googleapis": "^23.0.0",
+    "recursive-readdir-sync": "^1.0.6"
   },
   "devDependencies": {
     "prettier": "^1.9.2"
