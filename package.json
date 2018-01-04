@@ -1,0 +1,18 @@
+{
+  "name": "snippets-rules",
+  "version": "1.0.0",
+  "description": "Snippets for Firebase Security Rules",
+  "main": "index.js",
+  "scripts": {
+    "fmt": "prettier --write *.js",
+    "test": "GOOGLE_APPLICATION_CREDENTIALS=service-account.json node index.js"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "googleapis": "^23.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^1.9.2"
+  }
+}
