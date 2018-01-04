@@ -4,7 +4,7 @@
   "description": "Snippets for Firebase Security Rules",
   "main": "index.js",
   "scripts": {
-    "fmt": "prettier --write *.js",
+    "fmt": "prettier --single-quote --write *.js",
     "test": "GOOGLE_APPLICATION_CREDENTIALS=service-account.json node index.js"
   },
   "author": "",
