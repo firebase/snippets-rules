@@ -1,3 +1,4 @@
+// [START rbac_step_2]
 service cloud.firestore {
    match /databases/{database}/documents {
      match /stories/{story} {
@@ -32,3 +33,4 @@ service cloud.firestore {
      }
    }
 }
+// [END rbac_step_2]
