@@ -6,7 +6,7 @@ service cloud.firestore {
         }
 
         function getRole() {
-          return value(/databases/$(database)/documents/stories/$(story)).roles[request.auth.uid];
+          return get(/databases/$(database)/documents/stories/$(story)).data.roles[request.auth.uid];
         }
 
         function isOneOfRoles(array) {
