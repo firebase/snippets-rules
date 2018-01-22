@@ -8,7 +8,7 @@ service cloud.firestore {
 
         function getRole() {
           // Read from the "roles" map in the story document.
-          return get(/databases/$(database)/documents/stories/$(story)).data.roles[request.auth.uid];
+          return resource.data.roles[request.auth.uid];
         }
 
         function isOneOfRoles(array) {
