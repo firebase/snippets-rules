@@ -14,7 +14,7 @@ service cloud.firestore {
         }
 
         function isValidNewStory() {
-          return !exists(/databases/$(database)/documents/stories/$(story))
+          return resource.data == null
             && request.resource.data.roles[request.auth.uid] == 'owner';
         }
 
