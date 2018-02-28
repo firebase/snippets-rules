@@ -18,14 +18,15 @@ service cloud.firestore {
             && request.resource.data.roles[request.auth.uid] == 'owner';
         }
 
-        allow write: if isValidNewStory() || isOneOfRoles(['owner']);
+        allow write: if isValidNewStory() || isOneOfRoles(resource, ['owner']);
 
         // Any role can read stories.
-        allow read: if isOneOfRoles(['owner', 'writer', 'commenter', 'reader']);
+        allow read: if isOneOfRoles(resource, ['owner', 'writer', 'commenter', 'reader']);
 
         match /comments/{comment} {
           // Any role can read comments.
-          allow read: if isOneOfRoles(['owner', 'writer', 'commenter', 'reader']);
+          allow read: if isOneOfRoles(get(/databases/$(database)/documents/stories/$(story)),
+                                      ['owner', 'writer', 'commenter', 'reader']);
         }
      }
    }

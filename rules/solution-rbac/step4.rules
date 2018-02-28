@@ -18,8 +18,8 @@ service cloud.firestore {
             && request.resource.data.roles[request.auth.uid] == 'owner';
         }
 
-        allow write: if isValidNewStory() || isOneOfRoles(['owner'])
-        allow read: if isOneOfRoles(['owner', 'writer', 'commenter', 'reader']);
+        allow write: if isValidNewStory() || isOneOfRoles(resource, ['owner'])
+        allow read: if isOneOfRoles(resource, ['owner', 'writer', 'commenter', 'reader']);
 
         match /comments/{comment} {
           allow read: if isOneOfRoles(['owner', 'writer', 'commenter', 'reader']);
@@ -27,7 +27,8 @@ service cloud.firestore {
           // Owners, writers, and commenters can create comments. The
           // user id in the comment document must match the requesting
           // user's id.
-          allow create: if isOneOfRoles(['owner', 'writer', 'commenter'])
+          allow create: if isOneOfRoles(get(/databases/$(database)/documents/stories/$(story)),
+                                        ['owner', 'writer', 'commenter', 'reader'])
                         && request.resource.data.user == request.auth.uid;
         }
      }

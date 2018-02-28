@@ -6,14 +6,14 @@ service cloud.firestore {
           return request.auth != null;
         }
 
-        function getRole() {
+        function getRole(rsc) {
           // Read from the "roles" map in the story document.
-          return resource.data.roles[request.auth.uid];
+          return rsc.data.roles[request.auth.uid];
         }
 
-        function isOneOfRoles(array) {
+        function isOneOfRoles(rsc, array) {
           // Determine if the user is one of an array of roles
-          return isSignedIn() && (getRole() in array);
+          return isSignedIn() && (getRole(rsc) in array);
         }
 
         function isValidNewStory() {
@@ -23,7 +23,7 @@ service cloud.firestore {
         }
 
         // Owners can read, write, and delete stories
-        allow write: if isValidNewStory() || isOneOfRoles(['owner']);
+        allow write: if isValidNewStory() || isOneOfRoles(resource, ['owner']);
 
          match /comments/{comment} {
             // [START_EXCLUDE]
