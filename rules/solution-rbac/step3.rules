@@ -5,12 +5,12 @@ service cloud.firestore {
           return request.auth != null;
         }
 
-        function getRole() {
-          return resource.data.roles[request.auth.uid];
+        function getRole(rsc) {
+          return rsc.data.roles[request.auth.uid];
         }
 
-        function isOneOfRoles(array) {
-          return isSignedIn() && (getRole() in array);
+        function isOneOfRoles(rsc, array) {
+          return isSignedIn() && (getRole(rsc) in array);
         }
 
         function isValidNewStory() {

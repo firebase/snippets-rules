@@ -7,7 +7,7 @@ service cloud.firestore {
         }
 
         function getRole(rsc) {
-          // Read from the "roles" map in the story document.
+          // Read from the "roles" map in the resource (rsc).
           return rsc.data.roles[request.auth.uid];
         }
 
