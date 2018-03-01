@@ -22,7 +22,8 @@ service cloud.firestore {
         allow read: if isOneOfRoles(resource, ['owner', 'writer', 'commenter', 'reader']);
 
         match /comments/{comment} {
-          allow read: if isOneOfRoles(['owner', 'writer', 'commenter', 'reader']);
+          allow read: if isOneOfRoles(get(/databases/$(database)/documents/stories/$(story)),
+                                      ['owner', 'writer', 'commenter', 'reader']);
 
           // Owners, writers, and commenters can create comments. The
           // user id in the comment document must match the requesting
