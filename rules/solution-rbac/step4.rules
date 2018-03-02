@@ -14,7 +14,7 @@ service cloud.firestore {
         }
 
         function isValidNewStory() {
-          return resource.data == null
+          return resource == null
             && request.resource.data.roles[request.auth.uid] == 'owner';
         }
 
