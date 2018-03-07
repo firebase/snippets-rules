@@ -15,5 +15,5 @@ fi
 if [ "$TRAVIS_SECURE_ENV_VARS" = false ]; then
   echo "Could not find secure environment variables, skipping integration tests."
 else
-  GOOGLE_APPLICATION_CREDENTIALS=service-account.json npm test
+  GOOGLE_APPLICATION_CREDENTIALS=service-account.json npm run build && npm run test
 fi
