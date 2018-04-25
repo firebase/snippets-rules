@@ -18,8 +18,6 @@ import 'babel-polyfill';
 
 import { expect } from 'chai';
 
-import * as assert from 'assert';
-import * as fs from 'fs';
 import * as path from 'path';
 
 const expectFirestore = require('expect-firestore');
@@ -63,9 +61,8 @@ async function getAuthenticatedDb() {
   return database;
 }
 
-function getRulesFile(name: string): string {
-  const filePath = path.join(__dirname, name);
-  return fs.readFileSync(filePath).toString();
+function getRulesFilePath(name: string): string {
+  return path.join(__dirname, name);
 }
 
 function clearMockData(database: any) {
@@ -75,7 +72,7 @@ function clearMockData(database: any) {
 
 function setMockDataAndRules(database: any, data: any, rulesFile: string) {
   database.setData(data);
-  database.setRules(getRulesFile(rulesFile));
+  database.setRulesFromFile(getRulesFilePath(rulesFile));
 }
 
 describe('[Basic Rules]', () => {
@@ -115,7 +112,7 @@ describe('[RBAC Rules]', () => {
     clearMockData(database);
   });
 
-  it('[step2] only owners can create stories', async () => {
+  it('[step2] owners can create stories', async () => {
     setMockDataAndRules(
       database,
       rbacData,

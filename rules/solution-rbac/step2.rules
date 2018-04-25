@@ -13,7 +13,7 @@ service cloud.firestore {
 
         function isOneOfRoles(rsc, array) {
           // Determine if the user is one of an array of roles
-          return isSignedIn() && (getRole(rsc) in array);
+          return isSignedIn() && (rsc != null) && (getRole(rsc) in array);
         }
 
         function isValidNewStory() {
