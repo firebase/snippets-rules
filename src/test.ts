@@ -28,7 +28,7 @@ const basicData = {
     {
       key: 'story1',
       fields: {
-        name: 'Story 1'
+        title: 'Story 1'
       },
       collections: {}
     }
@@ -40,13 +40,38 @@ const rbacData = {
     {
       key: 'story1',
       fields: {
-        name: 'Story 1',
+        title: 'Story 1',
+        content: 'The quick brown fox...',
         roles: {
           owneruser: 'owner',
           readeruser: 'reader'
         }
       },
       collections: {}
+    },
+    {
+      key: 'storywithcomments',
+      fields: {
+        title: 'Story With Comments',
+        content: 'The quick brown fox...',
+        roles: {
+          owneruser: 'owner',
+          readeruser: 'reader',
+          commenteruser: 'commenter'
+        }
+      },
+      collections: {
+        comments: [
+          {
+            key: 'comment1',
+            fields: {
+              text: 'This is a comment',
+              user: 'randomuser'
+            },
+            collections: {}
+          }
+        ]
+      }
     }
   ]
 };
@@ -65,16 +90,6 @@ function getRulesFilePath(name: string): string {
   return path.join(__dirname, name);
 }
 
-function clearMockData(database: any) {
-  database.setData({});
-  database.setRules('');
-}
-
-function setMockDataAndRules(database: any, data: any, rulesFile: string) {
-  database.setData(data);
-  database.setRulesFromFile(getRulesFilePath(rulesFile));
-}
-
 describe('[Basic Rules]', () => {
   let database: any;
 
@@ -83,18 +98,21 @@ describe('[Basic Rules]', () => {
   });
 
   afterEach(() => {
-    clearMockData(database);
+    database.setData({});
+    database.setRules('');
   });
 
   it('should allow a read at any path to open rules', async () => {
-    setMockDataAndRules(database, basicData, '../rules/open.rules');
+    database.setData(basicData);
+    database.setRulesFromFile(getRulesFilePath('../rules/open.rules'));
 
     const readAllowed = await database.canGet({}, 'any/path');
     expectFirestore.assert(readAllowed);
   });
 
   it('should deny a read any any path to closed rules', async () => {
-    setMockDataAndRules(database, basicData, '../rules/closed.rules');
+    database.setData(basicData);
+    database.setRulesFromFile(getRulesFilePath('../rules/closed.rules'));
 
     const readNotAllowed = await database.cannotGet({}, 'any/path');
     expectFirestore.assert(readNotAllowed);
@@ -109,14 +127,14 @@ describe('[RBAC Rules]', () => {
   });
 
   afterEach(() => {
-    clearMockData(database);
+    database.setData({});
+    database.setRules('');
   });
 
   it('[step2] owners can create stories', async () => {
-    setMockDataAndRules(
-      database,
-      rbacData,
-      '../rules/solution-rbac/step2.rules'
+    database.setData(rbacData);
+    database.setRulesFromFile(
+      getRulesFilePath('../rules/solution-rbac/step2.rules')
     );
 
     const auth = {
@@ -124,7 +142,7 @@ describe('[RBAC Rules]', () => {
     };
 
     const ownerStory = {
-      name: 'New Story',
+      title: 'New Story',
       roles: {
         user1234: 'owner'
       }
@@ -139,10 +157,9 @@ describe('[RBAC Rules]', () => {
   });
 
   it('[step2] readers cannot create stories', async () => {
-    setMockDataAndRules(
-      database,
-      rbacData,
-      '../rules/solution-rbac/step2.rules'
+    database.setData(rbacData);
+    database.setRulesFromFile(
+      getRulesFilePath('../rules/solution-rbac/step2.rules')
     );
 
     const auth = {
@@ -150,7 +167,7 @@ describe('[RBAC Rules]', () => {
     };
 
     const readerStory = {
-      name: 'New Story',
+      title: 'New Story',
       roles: {
         user1234: 'reader'
       }
@@ -165,10 +182,9 @@ describe('[RBAC Rules]', () => {
   });
 
   it('[step3] any role should be allowed to read stories', async () => {
-    setMockDataAndRules(
-      database,
-      rbacData,
-      '../rules/solution-rbac/step3.rules'
+    database.setData(rbacData);
+    database.setRulesFromFile(
+      getRulesFilePath('../rules/solution-rbac/step3.rules')
     );
 
     const ownerAllowed = await database.canGet(
@@ -188,5 +204,103 @@ describe('[RBAC Rules]', () => {
       'stories/story1'
     );
     expectFirestore.assert(strangerNotAllowed);
+  });
+
+  it('[step4] any role can read comments', async () => {
+    database.setData(rbacData);
+    database.setRulesFromFile(
+      getRulesFilePath('../rules/solution-rbac/step4.rules')
+    );
+
+    const readerAllowed = await database.canGet(
+      { uid: 'readeruser' },
+      'stories/storywithcomments/comments/comment1'
+    );
+    expectFirestore.assert(readerAllowed);
+  });
+
+  it('[step4] commenter can create comments', async () => {
+    database.setData(rbacData);
+    database.setRulesFromFile(
+      getRulesFilePath('../rules/solution-rbac/step4.rules')
+    );
+
+    const commenterAllowed = await database.canSet(
+      { uid: 'commenteruser' },
+      'stories/storywithcomments/comments/comment2',
+      {
+        user: 'commenteruser',
+        text: 'A new comment!'
+      }
+    );
+    expectFirestore.assert(commenterAllowed);
+  });
+
+  it('[step4] reader cannot create comments', async () => {
+    database.setData(rbacData);
+    database.setRulesFromFile(
+      getRulesFilePath('../rules/solution-rbac/step4.rules')
+    );
+
+    const readerNotAllowed = await database.cannotSet(
+      { uid: 'readeruser' },
+      'stories/storywithcomments/comments/comment2',
+      {
+        user: 'readeruser',
+        text: 'A new comment!'
+      }
+    );
+    expectFirestore.assert(readerNotAllowed);
+  });
+
+  it('[step4] comments must have the right user id', async () => {
+    database.setData(rbacData);
+    database.setRulesFromFile(
+      getRulesFilePath('../rules/solution-rbac/step4.rules')
+    );
+
+    const mismatchNotAllowed = await database.cannotSet(
+      { uid: 'commenteruser' },
+      'stories/storywithcomments/comments/comment2',
+      {
+        user: 'commenteruser-blah',
+        text: 'A new comment!'
+      }
+    );
+    expectFirestore.assert(mismatchNotAllowed);
+  });
+
+  it('[step5] writer can update content only', async () => {
+    database.setData(rbacData);
+    database.setRulesFromFile(
+      getRulesFilePath('../rules/solution-rbac/step5.rules')
+    );
+
+    const writerAllowed = await database.canUpdate(
+      { uid: 'writeruser' },
+      'stores/story1',
+      {
+        content: 'Something new!'
+      }
+    );
+
+    expectFirestore.assert(writerAllowed);
+  });
+
+  it('[step5] writer cannot update title', async () => {
+    database.setData(rbacData);
+    database.setRulesFromFile(
+      getRulesFilePath('../rules/solution-rbac/step5.rules')
+    );
+
+    const writerNotAllowed = await database.cannotUpdate(
+      { uid: 'writeruser' },
+      'stores/story1',
+      {
+        title: 'A new name'
+      }
+    );
+
+    expectFirestore.assert(writerNotAllowed);
   });
 });

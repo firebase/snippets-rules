@@ -38,7 +38,7 @@ service cloud.firestore {
           allow read: if isOneOfRoles(get(/databases/$(database)/documents/stories/$(story)),
                                       ['owner', 'writer', 'commenter', 'reader']);
           allow create: if isOneOfRoles(get(/databases/$(database)/documents/stories/$(story)),
-                                        ['owner', 'writer', 'commenter', 'reader'])
+                                        ['owner', 'writer', 'commenter'])
                         && request.resource.data.user == request.auth.uid;
         }
      }
