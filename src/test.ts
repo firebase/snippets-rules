@@ -73,9 +73,6 @@ function getAuthedDb(project: string, uid: string | any) {
     .firestore();
 }
 
-// TODO: After tests, delete firebase apps
-// TODO: Maybe want a new project ID for each test?
-
 describe('[Open Rules]', () => {
   before(async () => {
     await firebase.loadFirestoreRules({
