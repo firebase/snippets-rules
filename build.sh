@@ -23,7 +23,16 @@ if [ "$TRAVIS_SECURE_ENV_VARS" = false ]; then
 else
   $FIREBASE --open-sesame emulators
   $FIREBASE setup:emulators:firestore
-  $FIREBASE serve --only firestore &
-  sleep 5
+
+  $FIREBASE serve --only firestore > /dev/null &
+  PID=$!
+  while ! nc -z localhost 8080; do
+    sleep 0.1
+  done
+
   GOOGLE_APPLICATION_CREDENTIALS=service-account.json npm run test
+
+  kill $PID
+  wait $PID
+  exit 0
 fi
