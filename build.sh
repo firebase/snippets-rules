@@ -33,6 +33,4 @@ else
   GOOGLE_APPLICATION_CREDENTIALS=service-account.json npm run test
 
   kill $PID
-  wait $PID
-  exit 0
 fi
