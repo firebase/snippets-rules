@@ -15,11 +15,14 @@ fi
 npm install
 npm run build
 
+export FIREBASE=./node_modules/.bin/firebase
+
 # Only run test suite when we can decode the service acct
 if [ "$TRAVIS_SECURE_ENV_VARS" = false ]; then
   echo "Could not find secure environment variables, skipping integration tests."
 else
-  ./node_modules/.bin/firebase serve --only firestore &
+  $FIREBASE --open-sesame emulators
+  $FIREBASE serve --only firestore &
   sleep 5
   GOOGLE_APPLICATION_CREDENTIALS=service-account.json npm run test
 fi
