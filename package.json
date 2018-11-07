@@ -7,12 +7,13 @@
     "build": "npm run fmt && tsc",
     "fmt": "prettier --single-quote --write ./src/*.js ./src/*.ts",
     "build-rules": "GOOGLE_APPLICATION_CREDENTIALS=service-account.json node dist/build.js",
-    "test-rules": "mocha dist/test.js",
+    "test-rules": "mocha --exit dist/test.js",
     "test": "npm run build-rules && npm run test-rules"
   },
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
+    "@firebase/testing": "^0.3.1",
     "@types/chai": "^4.1.2",
     "@types/mocha": "^2.2.48",
     "@types/node": "^9.4.6",
@@ -25,6 +26,7 @@
     "recursive-readdir-sync": "^1.0.6"
   },
   "devDependencies": {
+    "firebase-tools": "^6.0.1",
     "prettier": "^1.9.2",
     "typescript": "^2.7.2"
   }

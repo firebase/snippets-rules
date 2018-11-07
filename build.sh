@@ -11,9 +11,15 @@ else
   echo "TRAVIS_SECURE_ENV_VARS: $TRAVIS_SECURE_ENV_VARS"
 fi
 
+# Build
+npm install
+npm run build
+
 # Only run test suite when we can decode the service acct
 if [ "$TRAVIS_SECURE_ENV_VARS" = false ]; then
   echo "Could not find secure environment variables, skipping integration tests."
 else
-  GOOGLE_APPLICATION_CREDENTIALS=service-account.json npm run build && npm run test
+  ./node_modules/.bin/firebase serve --only firestore &
+  sleep 5
+  GOOGLE_APPLICATION_CREDENTIALS=service-account.json npm run test
 fi
