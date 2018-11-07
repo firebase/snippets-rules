@@ -171,7 +171,7 @@ describe('[RBAC Rules]', () => {
   });
 
   it('[step3] any known role should be allowed to read stories', async () => {
-    loadRbacRules('step3');
+    await loadRbacRules('step3');
 
     const ownerDb = getAuthedDb('rbac-rules', 'owneruser');
     await firebase.assertSucceeds(
@@ -199,7 +199,7 @@ describe('[RBAC Rules]', () => {
   });
 
   it('[step4] any role can read comments', async () => {
-    loadRbacRules('step4');
+    await loadRbacRules('step4');
 
     const db = getAuthedDb('rbac-rules', 'readeruser');
     await firebase.assertSucceeds(
@@ -213,7 +213,7 @@ describe('[RBAC Rules]', () => {
   });
 
   it('[step4] commenter can create comments', async () => {
-    loadRbacRules('step4');
+    await loadRbacRules('step4');
 
     const db = getAuthedDb('rbac-rules', 'commenteruser');
     await firebase.assertSucceeds(
@@ -229,7 +229,7 @@ describe('[RBAC Rules]', () => {
   });
 
   it('[step4] reader cannot create comments', async () => {
-    loadRbacRules('step4');
+    await loadRbacRules('step4');
 
     const db = getAuthedDb('rbac-rules', 'readeruser');
     await firebase.assertFails(
@@ -245,7 +245,7 @@ describe('[RBAC Rules]', () => {
   });
 
   it('[step4] comments must have the right user id', async () => {
-    loadRbacRules('step4');
+    await loadRbacRules('step4');
 
     const db = getAuthedDb('rbac-rules', 'commenteruser');
     await firebase.assertFails(
@@ -262,7 +262,7 @@ describe('[RBAC Rules]', () => {
   });
 
   it('[step5] writer can update content only', async () => {
-    loadRbacRules('step5');
+    await loadRbacRules('step5');
 
     const db = getAuthedDb('rbac-rules', 'writeruser');
     await firebase.assertSucceeds(
@@ -276,7 +276,7 @@ describe('[RBAC Rules]', () => {
   });
 
   it('[step5] writer cannot update title', async () => {
-    loadRbacRules('step5');
+    await loadRbacRules('step5');
 
     const db = getAuthedDb('rbac-rules', 'writeruser');
     await firebase.assertFails(
