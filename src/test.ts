@@ -16,131 +16,131 @@
 import 'mocha';
 import 'babel-polyfill';
 
-import { expect } from 'chai';
-
+import * as firebase from '@firebase/testing';
 import * as path from 'path';
+import * as fs from 'fs';
 
-const expectFirestore = require('expect-firestore');
-const serviceAccount = require('../service-account.json');
-
-const basicData = {
-  stories: [
+const rbacData = new Map([
+  [
+    'stories/story1',
     {
-      key: 'story1',
-      fields: {
-        title: 'Story 1'
-      },
-      collections: {}
-    }
-  ]
-};
-
-const rbacData = {
-  stories: [
-    {
-      key: 'story1',
-      fields: {
-        title: 'Story 1',
-        content: 'The quick brown fox...',
-        roles: {
-          owneruser: 'owner',
-          writeruser: 'writer',
-          readeruser: 'reader'
-        }
-      },
-      collections: {}
-    },
-    {
-      key: 'storywithcomments',
-      fields: {
-        title: 'Story With Comments',
-        content: 'The quick brown fox...',
-        roles: {
-          owneruser: 'owner',
-          readeruser: 'reader',
-          commenteruser: 'commenter'
-        }
-      },
-      collections: {
-        comments: [
-          {
-            key: 'comment1',
-            fields: {
-              text: 'This is a comment',
-              user: 'randomuser'
-            },
-            collections: {}
-          }
-        ]
+      title: 'Story 1',
+      content: 'The quick brown fox...',
+      roles: {
+        owneruser: 'owner',
+        writeruser: 'writer',
+        readeruser: 'reader'
       }
     }
+  ],
+  [
+    '/stories/storywithcomments',
+    {
+      title: 'Story With Comments',
+      content: 'The quick brown fox...',
+      roles: {
+        owneruser: 'owner',
+        readeruser: 'reader',
+        commenteruser: 'commenter'
+      }
+    }
+  ],
+  [
+    '/stories/storywithcomments/comments/comment1',
+    {
+      text: 'This is a comment',
+      user: 'randomuser'
+    }
   ]
-};
+]);
 
-async function getAuthenticatedDb() {
-  const database = new expectFirestore.Database({
-    credential: serviceAccount
-  });
-
-  await database.authorize();
-
-  return database;
+function readRulesFile(name: string): string {
+  return fs.readFileSync(getRulesFilePath(name)).toString();
 }
 
 function getRulesFilePath(name: string): string {
   return path.join(__dirname, name);
 }
 
-describe('[Basic Rules]', () => {
-  let database: any;
+function getAuthedDb(project: string, uid: string | any) {
+  return firebase
+    .initializeTestApp({
+      projectId: project,
+      auth: {
+        uid: uid
+      }
+    })
+    .firestore();
+}
 
+describe('[Open Rules]', () => {
   before(async () => {
-    database = await getAuthenticatedDb();
-  });
-
-  afterEach(() => {
-    database.setData({});
-    database.setRules('');
+    await firebase.loadFirestoreRules({
+      projectId: 'open-rules',
+      rules: readRulesFile('../rules/open.rules')
+    });
   });
 
   it('should allow a read at any path to open rules', async () => {
-    database.setData(basicData);
-    database.setRulesFromFile(getRulesFilePath('../rules/open.rules'));
+    const db = getAuthedDb('open-rules', undefined);
 
-    const readAllowed = await database.canGet({}, 'any/path');
-    expectFirestore.assert(readAllowed);
+    await firebase.assertSucceeds(
+      db
+        .collection('any')
+        .doc('doc')
+        .get()
+    );
+  });
+});
+
+describe('[Closed Rules]', () => {
+  before(async () => {
+    await firebase.loadFirestoreRules({
+      projectId: 'closed-rules',
+      rules: readRulesFile('../rules/closed.rules')
+    });
   });
 
   it('should deny a read any any path to closed rules', async () => {
-    database.setData(basicData);
-    database.setRulesFromFile(getRulesFilePath('../rules/closed.rules'));
+    const db = getAuthedDb('closed-rules', undefined);
 
-    const readNotAllowed = await database.cannotGet({}, 'any/path');
-    expectFirestore.assert(readNotAllowed);
+    await firebase.assertFails(
+      db
+        .collection('any')
+        .doc('doc')
+        .get()
+    );
   });
 });
 
 describe('[RBAC Rules]', () => {
-  let database: any;
+  async function loadRbacRules(name: string) {
+    await firebase.loadFirestoreRules({
+      projectId: 'rbac-rules',
+      rules: readRulesFile(`../rules/solution-rbac/${name}.rules`)
+    });
+  }
 
-  before(async () => {
-    database = await getAuthenticatedDb();
+  beforeEach(async () => {
+    const db = firebase
+      .initializeAdminApp({
+        projectId: 'rbac-rules'
+      })
+      .firestore();
+
+    for (let [docPath, docData] of rbacData) {
+      await db.doc(docPath).set(docData);
+    }
   });
 
-  afterEach(() => {
-    database.setData({});
-    database.setRules('');
+  afterEach(async () => {
+    await Promise.all(firebase.apps().map(app => app.delete()));
   });
 
   it('[step2] owners can create stories', async () => {
-    database.setData(rbacData);
-    database.setRulesFromFile(
-      getRulesFilePath('../rules/solution-rbac/step2.rules')
-    );
+    await loadRbacRules('step2');
 
-    const auth = {
-      uid: 'user1234'
-    };
+    const db = getAuthedDb('rbac-rules', 'user1234');
 
     const ownerStory = {
       title: 'New Story',
@@ -149,23 +149,13 @@ describe('[RBAC Rules]', () => {
       }
     };
 
-    const ownerAllowed = await database.canSet(
-      auth,
-      'stories/newstory',
-      ownerStory
-    );
-    expectFirestore.assert(ownerAllowed);
+    await firebase.assertSucceeds(db.collection('stories').add(ownerStory));
   });
 
   it('[step2] readers cannot create stories', async () => {
-    database.setData(rbacData);
-    database.setRulesFromFile(
-      getRulesFilePath('../rules/solution-rbac/step2.rules')
-    );
+    await loadRbacRules('step2');
 
-    const auth = {
-      uid: 'user1234'
-    };
+    const db = getAuthedDb('rbac-rules', 'user1234');
 
     const readerStory = {
       title: 'New Story',
@@ -174,137 +164,125 @@ describe('[RBAC Rules]', () => {
       }
     };
 
-    const readerNotAllowed = await database.cannotSet(
-      auth,
-      'stories/newstory',
-      readerStory
-    );
-    expectFirestore.assert(readerNotAllowed);
+    await firebase.assertFails(db.collection('stories').add(readerStory));
   });
 
-  it('[step3] any role should be allowed to read stories', async () => {
-    database.setData(rbacData);
-    database.setRulesFromFile(
-      getRulesFilePath('../rules/solution-rbac/step3.rules')
+  it('[step3] any known role should be allowed to read stories', async () => {
+    await loadRbacRules('step3');
+
+    const ownerDb = getAuthedDb('rbac-rules', 'owneruser');
+    await firebase.assertSucceeds(
+      ownerDb
+        .collection('stories')
+        .doc('story1')
+        .get()
     );
 
-    const ownerAllowed = await database.canGet(
-      { uid: 'owneruser' },
-      'stories/story1'
+    const readerDb = getAuthedDb('rbac-rules', 'readeruser');
+    await firebase.assertSucceeds(
+      readerDb
+        .collection('stories')
+        .doc('story1')
+        .get()
     );
-    expectFirestore.assert(ownerAllowed);
 
-    const readerAllowed = await database.canGet(
-      { uid: 'readeruser' },
-      'stories/story1'
+    const strangerDb = getAuthedDb('rbac-rules', 'stranger');
+    await firebase.assertFails(
+      strangerDb
+        .collection('stories')
+        .doc('story1')
+        .get()
     );
-    expectFirestore.assert(readerAllowed);
-
-    const strangerNotAllowed = await database.cannotGet(
-      { uid: 'stranger' },
-      'stories/story1'
-    );
-    expectFirestore.assert(strangerNotAllowed);
   });
 
   it('[step4] any role can read comments', async () => {
-    database.setData(rbacData);
-    database.setRulesFromFile(
-      getRulesFilePath('../rules/solution-rbac/step4.rules')
-    );
+    await loadRbacRules('step4');
 
-    const readerAllowed = await database.canGet(
-      { uid: 'readeruser' },
-      'stories/storywithcomments/comments/comment1'
+    const db = getAuthedDb('rbac-rules', 'readeruser');
+    await firebase.assertSucceeds(
+      db
+        .collection('stories')
+        .doc('storywithcomments')
+        .collection('comments')
+        .doc('comment1')
+        .get()
     );
-    expectFirestore.assert(readerAllowed);
   });
 
   it('[step4] commenter can create comments', async () => {
-    database.setData(rbacData);
-    database.setRulesFromFile(
-      getRulesFilePath('../rules/solution-rbac/step4.rules')
-    );
+    await loadRbacRules('step4');
 
-    const commenterAllowed = await database.canSet(
-      { uid: 'commenteruser' },
-      'stories/storywithcomments/comments/comment2',
-      {
-        user: 'commenteruser',
-        text: 'A new comment!'
-      }
+    const db = getAuthedDb('rbac-rules', 'commenteruser');
+    await firebase.assertSucceeds(
+      db
+        .collection('stories')
+        .doc('storywithcomments')
+        .collection('comments')
+        .add({
+          user: 'commenteruser',
+          text: 'A new comment!'
+        })
     );
-    expectFirestore.assert(commenterAllowed);
   });
 
   it('[step4] reader cannot create comments', async () => {
-    database.setData(rbacData);
-    database.setRulesFromFile(
-      getRulesFilePath('../rules/solution-rbac/step4.rules')
-    );
+    await loadRbacRules('step4');
 
-    const readerNotAllowed = await database.cannotSet(
-      { uid: 'readeruser' },
-      'stories/storywithcomments/comments/comment2',
-      {
-        user: 'readeruser',
-        text: 'A new comment!'
-      }
+    const db = getAuthedDb('rbac-rules', 'readeruser');
+    await firebase.assertFails(
+      db
+        .collection('stories')
+        .doc('storywithcomments')
+        .collection('comments')
+        .add({
+          user: 'commenteruser',
+          text: 'A new comment!'
+        })
     );
-    expectFirestore.assert(readerNotAllowed);
   });
 
   it('[step4] comments must have the right user id', async () => {
-    database.setData(rbacData);
-    database.setRulesFromFile(
-      getRulesFilePath('../rules/solution-rbac/step4.rules')
-    );
+    await loadRbacRules('step4');
 
-    const mismatchNotAllowed = await database.cannotSet(
-      { uid: 'commenteruser' },
-      'stories/storywithcomments/comments/comment2',
-      {
-        user: 'commenteruser-blah',
-        text: 'A new comment!'
-      }
+    const db = getAuthedDb('rbac-rules', 'commenteruser');
+    await firebase.assertFails(
+      db
+        .collection('stories')
+        .doc('storywithcomments')
+        .collection('comments')
+        .doc('comment2')
+        .set({
+          user: 'commenteruser-blah',
+          text: 'A new comment!'
+        })
     );
-    expectFirestore.assert(mismatchNotAllowed);
   });
 
-  // This will pass after this issue is fixed:
-  // https://github.com/GitbookIO/expect-firestore/issues/14
+  it('[step5] writer can update content only', async () => {
+    await loadRbacRules('step5');
 
-  // it('[step5] writer can update content only', async () => {
-  //   database.setData(rbacData);
-  //   database.setRulesFromFile(
-  //     getRulesFilePath('../rules/solution-rbac/step5.rules')
-  //   );
-
-  //   const writerAllowed = await database.canUpdate(
-  //     { uid: 'writeruser' },
-  //     'stories/story1',
-  //     {
-  //       content: 'Something new!'
-  //     }
-  //   );
-
-  //   expectFirestore.assert(writerAllowed);
-  // });
+    const db = getAuthedDb('rbac-rules', 'writeruser');
+    await firebase.assertSucceeds(
+      db
+        .collection('stories')
+        .doc('story1')
+        .update({
+          content: 'Something new!'
+        })
+    );
+  });
 
   it('[step5] writer cannot update title', async () => {
-    database.setData(rbacData);
-    database.setRulesFromFile(
-      getRulesFilePath('../rules/solution-rbac/step5.rules')
-    );
+    await loadRbacRules('step5');
 
-    const writerNotAllowed = await database.cannotUpdate(
-      { uid: 'writeruser' },
-      'stories/story1',
-      {
-        title: 'A new name'
-      }
+    const db = getAuthedDb('rbac-rules', 'writeruser');
+    await firebase.assertFails(
+      db
+        .collection('stories')
+        .doc('story1')
+        .update({
+          title: 'A new name'
+        })
     );
-
-    expectFirestore.assert(writerNotAllowed);
   });
 });
