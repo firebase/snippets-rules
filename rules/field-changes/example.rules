@@ -1,0 +1,21 @@
+service cloud.firestore {
+
+  // Determine if the value of the field "key" is the same
+  // before and after the request.
+  function unchanged(key) {
+    return (key in resource.data) 
+      && (key in request.resource.data) 
+      && (resource.data[key] == request.resource.data[key]);
+  }
+
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read: if true;
+
+      // Allow writes if the data has all of the same fields and
+      // the "name" field is unchanged.
+      allow update: if (request.resource.data.keys() == resource.data.keys()) 
+        && unchanged("name");
+    }
+  }
+}

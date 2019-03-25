@@ -21,11 +21,13 @@ export FIREBASE=./node_modules/.bin/firebase
 if [ "$TRAVIS_SECURE_ENV_VARS" = false ]; then
   echo "Could not find secure environment variables, skipping integration tests."
 else
-  $FIREBASE --open-sesame emulators
-  $FIREBASE setup:emulators:firestore
+  $FIREBASE --debug setup:emulators:firestore
 
-  $FIREBASE serve --only firestore > /dev/null &
+  # Directly run the Firestore emulator to force the host
+  # See: https://github.com/firebase/quickstart-nodejs/issues/48
+  java -jar $HOME/.cache/firebase/emulators/cloud-firestore-emulator-*.jar --host=127.0.0.1 &
   PID=$!
+
   while ! nc -z localhost 8080; do
     sleep 0.1
   done
