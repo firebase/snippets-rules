@@ -21,9 +21,9 @@ export FIREBASE=./node_modules/.bin/firebase
 if [ "$TRAVIS_SECURE_ENV_VARS" = false ]; then
   echo "Could not find secure environment variables, skipping integration tests."
 else
-  $FIREBASE setup:emulators:firestore
+  $FIREBASE --debug setup:emulators:firestore
 
-  $FIREBASE serve --only firestore > ./serve-debug.log &
+  $FIREBASE --debug serve --only firestore &
   PID=$!
   while ! nc -z localhost 8080; do
     sleep 0.1

@@ -7,6 +7,4 @@ before_install:
   -in service-account.json.enc -out service-account.json -d
 script: "./build.sh"
 after_failure:
-- echo "SERVE DEBUG" && cat serve-debug.log
 - echo "FIREBASE DEBUG" && cat firebase-debug.log
-- echo "FIRESTORE DEBUG" && cat firestore-debug.log
