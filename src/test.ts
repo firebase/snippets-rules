@@ -113,6 +113,76 @@ describe('[Closed Rules]', () => {
   });
 });
 
+describe('[Field Change Rules]', () => {
+  before(async () => {
+    await firebase.loadFirestoreRules({
+      projectId: 'field-changes',
+      rules: readRulesFile('../rules/field-changes/example.rules')
+    });
+  });
+
+  beforeEach(async () => {
+    const db = firebase
+      .initializeAdminApp({
+        projectId: 'field-changes'
+      })
+      .firestore();
+
+    await db.doc('/docs/test').set({
+      name: 'test-doc',
+      age: 1
+    });
+  });
+
+  it('should allow a read to any path', async () => {
+    const db = getAuthedDb('field-changes', undefined);
+
+    await firebase.assertSucceeds(
+      db
+        .collection('any')
+        .doc('doc')
+        .get()
+    );
+  });
+
+  it('should allow a write to a non-name field', async () => {
+    const db = getAuthedDb('field-changes', undefined);
+
+    await firebase.assertSucceeds(
+      db
+        .collection('docs')
+        .doc('test')
+        .update('age', 2)
+    );
+  });
+
+  it('should deny a write where name changes', async () => {
+    const db = getAuthedDb('field-changes', undefined);
+
+    await firebase.assertFails(
+      db
+        .collection('docs')
+        .doc('test')
+        .update('name', 'sam')
+    );
+  });
+
+  it('should deny a write where a field is added', async () => {
+    const db = getAuthedDb('field-changes', undefined);
+
+    await firebase.assertFails(
+      db
+        .collection('docs')
+        .doc('test')
+        .set({
+          name: 'test-doc',
+          age: 1,
+          other: 'new-data'
+        })
+    );
+  });
+});
+
 describe('[RBAC Rules]', () => {
   async function loadRbacRules(name: string) {
     await firebase.loadFirestoreRules({
