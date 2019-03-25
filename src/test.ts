@@ -63,12 +63,11 @@ function getRulesFilePath(name: string): string {
 }
 
 function getAuthedDb(project: string, uid: string | any) {
+  const auth = uid ? { uid } : undefined;
   return firebase
     .initializeTestApp({
       projectId: project,
-      auth: {
-        uid: uid
-      }
+      auth: auth
     })
     .firestore();
 }
