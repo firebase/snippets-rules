@@ -31,7 +31,7 @@ service cloud.firestore {
           //
           // Note: we have to use get() here to retrieve the story
           // document so that we can check the user's role.
-          allow write: if isOneOfRoles(get(/databases/$(database)/documents/stories/$(story)),
+          allow create: if isOneOfRoles(get(/databases/$(database)/documents/stories/$(story)),
                                         ['owner', 'writer', 'commenter'])
                         && request.resource.data.user == request.auth.uid;
         }
