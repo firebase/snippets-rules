@@ -21,8 +21,8 @@ export FIREBASE=./node_modules/.bin/firebase
 if [ "$TRAVIS_SECURE_ENV_VARS" = false ]; then
   echo "Could not find secure environment variables, skipping integration tests."
 else
-  $FIREBASE \
-    --project=firestore-snippets emulators:exec \
+  $FIREBASE --project=firestore-snippets \
+    emulators:exec \
     --only firestore \
     "GOOGLE_APPLICATION_CREDENTIALS=service-account.json npm run test"
 fi
