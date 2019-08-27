@@ -32,7 +32,7 @@ service cloud.firestore {
         allow delete: if isOneOfRoles(resource, ['owner']);
         allow update: if isOneOfRoles(resource, ['owner'])
                       || (isOneOfRoles(resource, ['writer']) && onlyContentChanged());
-        allow read: if isOneOfRoles(['owner', 'writer', 'commenter', 'reader']);
+        allow read: if isOneOfRoles(resource, ['owner', 'writer', 'commenter', 'reader']);
 
         match /comments/{comment} {
           allow read: if isOneOfRoles(get(/databases/$(database)/documents/stories/$(story)),
