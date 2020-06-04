@@ -354,4 +354,48 @@ describe('[RBAC Rules]', () => {
         })
     );
   });
+
+  it('[step5] writer cannot add fields', async () => {
+    await loadRbacRules('step5');
+
+    const db = getAuthedDb('rbac-rules', 'writeruser');
+    await firebase.assertFails(
+      db
+        .collection('stories')
+        .doc('story1')
+        .update({
+          secret_field: 'An invalid field'
+        })
+    );
+  });
+
+
+  it('[step5] writer cannot remove fields', async () => {
+    await loadRbacRules('step5');
+
+    const db = getAuthedDb('rbac-rules', 'writeruser');
+    await firebase.assertFails(
+      db
+        .collection('stories')
+        .doc('story1')
+        .update({
+          content: firebase.firestore.FieldValue.delete()
+        })
+    );
+  });
+
+  it('[step5] writer cannot swap fields', async () => {
+    await loadRbacRules('step5');
+
+    const db = getAuthedDb('rbac-rules', 'writeruser');
+    await firebase.assertFails(
+      db
+        .collection('stories')
+        .doc('story1')
+        .update({
+          content: firebase.firestore.FieldValue.delete(),
+          invalid-content: 'Same number of fields, but different'
+        })
+    );
+  });
 });
