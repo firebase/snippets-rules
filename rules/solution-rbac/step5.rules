@@ -22,7 +22,7 @@ service cloud.firestore {
           // fields are added to the document.
           return request.resource.data.title == resource.data.title
             && request.resource.data.roles == resource.data.roles
-            && request.resource.size() == resource.size();
+            && request.resource.data.keys() == resource.data.keys();
         }
 
         // Split writing into creation, deletion, and updating. Only an
