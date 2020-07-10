@@ -369,7 +369,6 @@ describe('[RBAC Rules]', () => {
     );
   });
 
-
   it('[step5] writer cannot remove fields', async () => {
     await loadRbacRules('step5');
 
@@ -394,7 +393,7 @@ describe('[RBAC Rules]', () => {
         .doc('story1')
         .update({
           content: firebase.firestore.FieldValue.delete(),
-          invalid-content: 'Same number of fields, but different'
+          'invalid-content': 'Same number of fields, but different'
         })
     );
   });

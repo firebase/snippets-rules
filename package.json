@@ -2,31 +2,24 @@
   "name": "snippets-rules",
   "version": "1.0.0",
   "description": "Snippets for Firebase Security Rules",
-  "main": "index.js",
   "scripts": {
     "build": "npm run fmt && tsc",
     "fmt": "prettier --single-quote --write ./src/*.js ./src/*.ts",
-    "build-rules": "GOOGLE_APPLICATION_CREDENTIALS=service-account.json node dist/build.js",
-    "test-rules": "mocha --exit dist/test.js",
-    "test": "npm run build-rules && npm run test-rules"
+    "test": "mocha --exit dist/test.js"
   },
-  "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@firebase/testing": "^0.7.7",
-    "@types/chai": "^4.1.2",
-    "@types/mocha": "^2.2.48",
-    "@types/node": "^9.4.6",
+    "@firebase/testing": "^0.20.6",
     "babel-polyfill": "^6.26.0",
     "chai": "^4.1.2",
-    "expect-firestore": "^1.0.1",
-    "google-auth-library": "^1.3.1",
-    "googleapis": "^27.0.0",
     "mocha": "^5.0.4",
     "recursive-readdir-sync": "^1.0.6"
   },
   "devDependencies": {
-    "firebase-tools": "^7.1.1",
+    "@types/chai": "^4.1.2",
+    "@types/mocha": "^2.2.48",
+    "@types/node": "^9.4.6",
+    "firebase-tools": "^8.5.0",
     "prettier": "^1.9.2",
     "typescript": "^2.7.2"
   }
