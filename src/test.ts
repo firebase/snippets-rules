@@ -55,7 +55,7 @@ const rbacData = new Map([
 ]);
 
 function readRulesFile(name: string): string {
-  return fs.readFileSync(getRulesFilePath(name)).toString();
+  return fs.readFileSync(getRulesFilePath(name), 'utf8');
 }
 
 function getRulesFilePath(name: string): string {
