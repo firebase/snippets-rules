@@ -3,15 +3,17 @@
   "version": "1.0.0",
   "description": "Snippets for Firebase Security Rules",
   "scripts": {
-    "build": "npm run fmt && tsc",
-    "fmt": "prettier --single-quote --write ./src/*.js ./src/*.ts",
-    "test": "mocha --exit dist/test.js"
+    "build": "tsc",
+    "format": "prettier --single-quote --write ./tests/*.js ./tests/*.ts",
+    "test": "mocha --exit dist/*.test.js"
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@firebase/testing": "^0.20.6",
+    "@firebase/rules-unit-testing": "^1.1.1",
     "babel-polyfill": "^6.26.0",
     "chai": "^4.1.2",
+    "firebase": "^8.0.2",
+    "firebase-admin": "^9.4.1",
     "mocha": "^5.0.4",
     "recursive-readdir-sync": "^1.0.6"
   },
@@ -19,7 +21,7 @@
     "@types/chai": "^4.1.2",
     "@types/mocha": "^2.2.48",
     "@types/node": "^9.4.6",
-    "firebase-tools": "^8.5.0",
+    "firebase-tools": "^8.16.2",
     "prettier": "^1.9.2",
     "typescript": "^2.7.2"
   }
