@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Google Inc. All Rights Reserved.
+ * Copyright 2020 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 import 'mocha';
 import 'babel-polyfill';
 
-import * as firebase from '@firebase/testing';
-import * as path from 'path';
-import * as fs from 'fs';
+import * as firebase from '@firebase/rules-unit-testing';
+
+import { readRulesFile, getAuthedDb } from './util';
 
 const rbacData = new Map([
   [
@@ -53,134 +53,6 @@ const rbacData = new Map([
     }
   ]
 ]);
-
-function readRulesFile(name: string): string {
-  return fs.readFileSync(getRulesFilePath(name), 'utf8');
-}
-
-function getRulesFilePath(name: string): string {
-  return path.join(__dirname, name);
-}
-
-function getAuthedDb(project: string, uid: string | any) {
-  const auth = uid ? { uid } : undefined;
-  return firebase
-    .initializeTestApp({
-      projectId: project,
-      auth: auth
-    })
-    .firestore();
-}
-
-describe('[Open Rules]', () => {
-  before(async () => {
-    await firebase.loadFirestoreRules({
-      projectId: 'open-rules',
-      rules: readRulesFile('../rules/open.rules')
-    });
-  });
-
-  it('should allow a read at any path to open rules', async () => {
-    const db = getAuthedDb('open-rules', undefined);
-
-    await firebase.assertSucceeds(
-      db
-        .collection('any')
-        .doc('doc')
-        .get()
-    );
-  });
-});
-
-describe('[Closed Rules]', () => {
-  before(async () => {
-    await firebase.loadFirestoreRules({
-      projectId: 'closed-rules',
-      rules: readRulesFile('../rules/closed.rules')
-    });
-  });
-
-  it('should deny a read any any path to closed rules', async () => {
-    const db = getAuthedDb('closed-rules', undefined);
-
-    await firebase.assertFails(
-      db
-        .collection('any')
-        .doc('doc')
-        .get()
-    );
-  });
-});
-
-describe('[Field Change Rules]', () => {
-  before(async () => {
-    await firebase.loadFirestoreRules({
-      projectId: 'field-changes',
-      rules: readRulesFile('../rules/field-changes/example.rules')
-    });
-  });
-
-  beforeEach(async () => {
-    const db = firebase
-      .initializeAdminApp({
-        projectId: 'field-changes'
-      })
-      .firestore();
-
-    await db.doc('/docs/test').set({
-      name: 'test-doc',
-      age: 1
-    });
-  });
-
-  it('should allow a read to any path', async () => {
-    const db = getAuthedDb('field-changes', undefined);
-
-    await firebase.assertSucceeds(
-      db
-        .collection('any')
-        .doc('doc')
-        .get()
-    );
-  });
-
-  it('should allow a write to a non-name field', async () => {
-    const db = getAuthedDb('field-changes', undefined);
-
-    await firebase.assertSucceeds(
-      db
-        .collection('docs')
-        .doc('test')
-        .update('age', 2)
-    );
-  });
-
-  it('should deny a write where name changes', async () => {
-    const db = getAuthedDb('field-changes', undefined);
-
-    await firebase.assertFails(
-      db
-        .collection('docs')
-        .doc('test')
-        .update('name', 'sam')
-    );
-  });
-
-  it('should deny a write where a field is added', async () => {
-    const db = getAuthedDb('field-changes', undefined);
-
-    await firebase.assertFails(
-      db
-        .collection('docs')
-        .doc('test')
-        .set({
-          name: 'test-doc',
-          age: 1,
-          other: 'new-data'
-        })
-    );
-  });
-});
 
 describe('[RBAC Rules]', () => {
   async function loadRbacRules(name: string) {
