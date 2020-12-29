@@ -18,8 +18,7 @@ service cloud.firestore {
 
         function isValidNewStory() {
           // Valid if story does not exist and the new story has the correct owner.
-          return resource == null
-            && request.resource.data.roles[request.auth.uid] == 'owner';
+          return resource == null && isOneOfRoles(request.resource, ['owner']);
         }
 
         // Owners can read, write, and delete stories
