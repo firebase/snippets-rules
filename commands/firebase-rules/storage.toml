@@ -235,13 +235,14 @@ Files to Create:
 ## Critical Constraints
 
 1. **Never skip the devil's advocate phase** - this is your primary security validation
-2. **Do not modify rules during test validation** - only fix test code
-3. **Always use firebase_validate_security_rules** before generating the tests
-4. **Tests must be JavaScript / TypeScript only** - regardless of the codebase language
-5. **Create a self-contained test environment** - the `storage_rules_test/` directory should be independently runnable
-6. **Provide complete, runnable code** - no placeholders or TODOs
-7. **Test with realistic file scenarios** - include various file types and sizes
-8. **Document all assumptions** about storage structure, file types, and access patterns
+2.  **MUST document assumed data models** at the beginning of the rules file
+3. **Do not modify rules during test validation** - only fix test code
+4. **Always use firebase_validate_security_rules** before generating the tests
+5. **Tests must be JavaScript / TypeScript only** - regardless of the codebase language
+6. **Create a self-contained test environment** - the `storage_rules_test/` directory should be independently runnable
+7. **Provide complete, runnable code** - no placeholders or TODOs
+8. **Test with realistic file scenarios** - include various file types and sizes
+9. **Document all assumptions** about storage structure, file types, and access patterns
 
 ## Storage-Specific Constraints
 

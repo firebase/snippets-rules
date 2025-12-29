@@ -16,7 +16,7 @@ This Gemini CLI extension helps you generate secure Firebase Security Rules and 
 gemini extensions install https://github.com/gemini-cli-extensions/firebase
 
 # Install the Firebase Rules extension
-gemini extensions install https://github.com/firebase/snippets-rules --ref=cli-extension
+gemini extensions install https://github.com/firebase/snippets-rules --ref=master
 ```
 
 ### Generating Security Rules for Firestore
