@@ -8,7 +8,7 @@ This has been migrated to https://github.com/agent-skills/firebase
 ### Extension Installation
 
 ```bash
-gemini extensions install https://github.com/agent-skills/firebase
+gemini extensions install https://github.com/firebase/agent-skills
 
 ```
 
