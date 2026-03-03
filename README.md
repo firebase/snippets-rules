@@ -4,7 +4,7 @@ This repository holds code snippets used in security rules documentation
 on [firebase.google.com](https://firebase.google.com/docs/).
 
 ## Gemini CLI Extension -- AI-based Rule Generation
-This has been migrated to https://github.com/agent-skills/firebase
+This has been migrated to https://github.com/firebase/agent-skills
 ### Extension Installation
 
 ```bash
