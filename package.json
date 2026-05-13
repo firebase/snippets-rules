@@ -9,11 +9,11 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@firebase/rules-unit-testing": "^1.1.1",
+    "@firebase/rules-unit-testing": "^5.0.1",
     "babel-polyfill": "^6.26.0",
     "chai": "^4.1.2",
-    "firebase": "^8.0.2",
-    "firebase-admin": "^9.4.1",
+    "firebase": "^12.13.0",
+    "firebase-admin": "^13.9.0",
     "mocha": "^5.0.4",
     "recursive-readdir-sync": "^1.0.6"
   },
@@ -21,7 +21,7 @@
     "@types/chai": "^4.1.2",
     "@types/mocha": "^2.2.48",
     "@types/node": "^9.4.6",
-    "firebase-tools": "^8.16.2",
+    "firebase-tools": "^15.17.0",
     "prettier": "^1.9.2",
     "typescript": "^2.7.2"
   }
